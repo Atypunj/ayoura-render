@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request
-import swisseph as swe
+from flatlib.chart import Chart
+from flatlib.datetime import Datetime
+from flatlib.geopos import GeoPos
 import datetime
 
 app = Flask(__name__)
@@ -14,15 +16,19 @@ def index():
         time_str = request.form["tob"]
         place = request.form["pob"]
 
-        # Convert to datetime
         dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
-        jd_ut = swe.julday(dt.year, dt.month, dt.day, dt.hour + dt.minute/60.0)
+        dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')  # IST
+        pos = GeoPos("28.4089", "77.3178")  # Default: Faridabad, India
+        chart = Chart(dob, pos)
 
-        moon_long = swe.calc_ut(jd_ut, swe.MOON)[0]
+        moon = chart.get('MOON')
+        asc = chart.get('ASC')
+
         result = {
             "name": name,
             "gender": gender,
-            "moon_longitude": moon_long,
+            "moon_sign": moon.sign,
+            "ascendant": asc.sign,
             "place": place
         }
     return render_template("blessings.html", result=result)
