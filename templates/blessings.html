@@ -90,36 +90,15 @@
             <label><input type="radio" name="gender" value="female" required> 👩 Female</label>
         </div>
 
-        
         <label>Date of Birth:</label>
         <input type="date" name="dob" required>
 
         <label>Time of Birth:</label>
-        <input type="time" name="tob" step="60"><br>
+        <input type="time" name="tob" placeholder="HH:MM AM/PM" required>
 
-
-  <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const input = document.querySelector('input[name="pob"]');
-    let timeout;
-
-    input.addEventListener("input", function () {
-        clearTimeout(timeout);
-        if (input.value.length < 3) return;
-
-        timeout = setTimeout(() => {
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&limit=1&q=${input.value}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        input.value = data[0].display_name;
-                    }
-                });
-        }, 500);
-    });
-});
-</script>
-
+        <label>Place of Birth:</label>
+        <input type="text" name="place" id="place" list="place-options" required autocomplete="off">
+        <datalist id="place-options"></datalist>
 
         <button type="submit">✨ Generate Blessing ✨</button>
     </form>
