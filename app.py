@@ -1,46 +1,67 @@
+
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
-from flatlib import const
 import datetime
-import requests
 
-from flatlib.geopos import GeoPos
-from flatlib import const
+app = Flask(__name__)
 
-# Instead of converting to float:
-# Convert lat/lon float to string in flatlib-acceptable format
+nakshatras = [
+    ("Ashwini", "Ketu", 0.0, 13.3333),
+    ("Bharani", "Venus", 13.3333, 26.6666),
+    ("Krittika", "Sun", 26.6666, 40.0),
+    ("Rohini", "Moon", 40.0, 53.3333),
+    ("Mrigashira", "Mars", 53.3333, 66.6666),
+    ("Ardra", "Rahu", 66.6666, 80.0),
+    ("Punarvasu", "Jupiter", 80.0, 93.3333),
+    ("Pushya", "Saturn", 93.3333, 106.6666),
+    ("Ashlesha", "Mercury", 106.6666, 120.0),
+    ("Magha", "Ketu", 120.0, 133.3333),
+    ("Purva Phalguni", "Venus", 133.3333, 146.6666),
+    ("Uttara Phalguni", "Sun", 146.6666, 160.0),
+    ("Hasta", "Moon", 160.0, 173.3333),
+    ("Chitra", "Mars", 173.3333, 186.6666),
+    ("Swati", "Rahu", 186.6666, 200.0),
+    ("Vishakha", "Jupiter", 200.0, 213.3333),
+    ("Anuradha", "Saturn", 213.3333, 226.6666),
+    ("Jyeshtha", "Mercury", 226.6666, 240.0),
+    ("Mula", "Ketu", 240.0, 253.3333),
+    ("Purva Ashadha", "Venus", 253.3333, 266.6666),
+    ("Uttara Ashadha", "Sun", 266.6666, 280.0),
+    ("Shravana", "Moon", 280.0, 293.3333),
+    ("Dhanishta", "Mars", 293.3333, 306.6666),
+    ("Shatabhisha", "Rahu", 306.6666, 320.0),
+    ("Purva Bhadrapada", "Jupiter", 320.0, 333.3333),
+    ("Uttara Bhadrapada", "Saturn", 333.3333, 346.6666),
+    ("Revati", "Mercury", 346.6666, 360.0)
+]
+
+mahadasha_years = {
+    "Ketu": 7,
+    "Venus": 20,
+    "Sun": 6,
+    "Moon": 10,
+    "Mars": 7,
+    "Rahu": 18,
+    "Jupiter": 16,
+    "Saturn": 19,
+    "Mercury": 17
+}
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    result = None
+    
+# Convert float latitude/longitude to "degrees:minutes:seconds" format
 def float_to_dms_string(value):
     degrees = int(value)
     minutes = int((abs(value) - abs(degrees)) * 60)
     seconds = int(((abs(value) - abs(degrees)) * 60 - minutes) * 60)
     return f"{degrees}:{minutes}:{seconds}"
 
-lat_dms = float_to_dms_string(lat)
-lon_dms = float_to_dms_string(lon)
-pos = GeoPos(lat_dms, lon_dms)
 
-print("LatLon DMS:", lat_dms, lon_dms)
-
-
-app = Flask(__name__)
-
-def get_lat_lon(place):
-    try:
-        url = f"https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q={place}"
-        response = requests.get(url, headers={"User-Agent": "AyouraApp"})
-        data = response.json()
-        if data:
-            return float(data[0]['lat']), float(data[0]['lon'])
-    except Exception as e:
-        print("Geo lookup failed:", e)
-    return None, None
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    result = None
-    if request.method == "POST":
+if request.method == "POST":
         name = request.form.get("name")
         gender = request.form.get("gender")
         date_str = request.form.get("dob")
@@ -48,29 +69,36 @@ def index():
         place = request.form.get("pob")
 
         try:
-            lat, lon = get_lat_lon(place)
-            if lat is None or lon is None:
-                raise ValueError("Astrological data could not be computed. Please try a nearby known place.")
-
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-            pos = GeoPos(str(lat), str(lon))
-            chart = Chart(dob, pos)
+            pos = GeoPos("28.4089", "77.3178")  # Faridabad
 
-            moon = chart.get(const.MOON)
-            asc = chart.get(const.ASC)
+            chart = Chart(dob, pos)
+            moon = chart.get('MOON')
+            asc = chart.get('ASC')
+
+            moon_deg = moon.lon
+
+            nakshatra = "Unknown"
+            dasha_lord = "Unknown"
+            for name_nak, lord, start, end in nakshatras:
+                if start <= moon_deg < end:
+                    nakshatra = name_nak
+                    dasha_lord = lord
+                    break
 
             result = {
                 "name": name,
                 "gender": gender,
-                "place": place,
                 "moon_sign": moon.sign,
                 "ascendant": asc.sign,
-                "nakshatra": moon.nakshatra,
-                "mahadasha": "To be calculated"
+                "nakshatra": nakshatra,
+                "mahadasha": dasha_lord,
+                "place": place
             }
         except Exception as e:
-            result = {"error": str(e)}
+            print("Error:", e)
+            result = {"error": "There was a problem processing your input."}
 
     return render_template("blessings.html", result=result)
 
