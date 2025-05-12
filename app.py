@@ -6,6 +6,24 @@ from flatlib import const
 import datetime
 import requests
 
+from flatlib.geopos import GeoPos
+from flatlib import const
+
+# Instead of converting to float:
+# Convert lat/lon float to string in flatlib-acceptable format
+def float_to_dms_string(value):
+    degrees = int(value)
+    minutes = int((abs(value) - abs(degrees)) * 60)
+    seconds = int(((abs(value) - abs(degrees)) * 60 - minutes) * 60)
+    return f"{degrees}:{minutes}:{seconds}"
+
+lat_dms = float_to_dms_string(lat)
+lon_dms = float_to_dms_string(lon)
+pos = GeoPos(lat_dms, lon_dms)
+
+print("LatLon DMS:", lat_dms, lon_dms)
+
+
 app = Flask(__name__)
 
 def get_lat_lon(place):
