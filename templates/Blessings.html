@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fragrance of Blessings</title>
+</head>
+<body>
+    <h1>🌸 Fragrance of Blessings 🌸</h1>
+    {% if result %}
+        <p><strong>Name:</strong> {{ result.name }}</p>
+        <p><strong>Gender:</strong> {{ result.gender }}</p>
+        <p><strong>Place of Birth:</strong> {{ result.place }}</p>
+        <p><strong>Moon Sign (Rashi):</strong> {{ result.moon_sign }}</p>
+        <p><strong>Ascendant (Lagna):</strong> {{ result.ascendant }}</p>
+    {% else %}
+        <form method="POST">
+            Name: <input type="text" name="name"><br>
+            Gender: 
+            <select name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select><br>
+            Date of Birth: <input type="date" name="dob"><br>
+            Time of Birth: <input type="time" name="tob"><br>
+            Place of Birth: <input type="text" name="pob"><br>
+            <button type="submit">Get Blessings</button>
+        </form>
+    {% endif %}
+</body>
+</html>
