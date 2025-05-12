@@ -97,7 +97,7 @@
         <input type="time" name="tob" placeholder="HH:MM AM/PM" required>
 
         <label>Place of Birth:</label>
-        <input type="text" name="place" id="place" list="place-options" required autocomplete="off">
+        <input type="text" name="pob" id="place" list="place-options" required autocomplete="off">
         <datalist id="place-options"></datalist>
 
         <button type="submit">✨ Generate Blessing ✨</button>
@@ -108,33 +108,7 @@
 
     
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const placeInput = document.getElementById('place');
-            const datalist = document.getElementById('place-options');
-            let debounce;
-
-            placeInput.addEventListener('input', function () {
-                clearTimeout(debounce);
-                const query = this.value;
-                if (query.length < 3) return;
-
-                debounce = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=in&q=${query}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            datalist.innerHTML = '';
-                            data.forEach(place => {
-                                const option = document.createElement('option');
-                                option.value = place.display_name;
-                                datalist.appendChild(option);
-                            });
-                        });
-                }, 300);
-            });
-        });
-    </script>
-<script>
+   <script>
 document.addEventListener("DOMContentLoaded", function () {
     const input = document.querySelector('input[name="pob"]');
     let timeout;
