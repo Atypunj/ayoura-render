@@ -14,23 +14,28 @@ def index():
         gender = request.form.get("gender")
         date_str = request.form.get("dob")
         time_str = request.form.get("tob")
-        place = request.form.get("pob")
+        place = request.form.get("pob")  # make sure your form uses name="pob"
 
-        dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
-        dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')  # IST
-        pos = GeoPos("28.4089", "77.3178")  # Default: Faridabad, India
-        chart = Chart(dob, pos)
+        try:
+            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
+            dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')  # IST
+            pos = GeoPos("28.4089", "77.3178")  # Faridabad fallback
 
-        moon = chart.get('MOON')
-        asc = chart.get('ASC')
+            chart = Chart(dob, pos)
+            moon = chart.get('MOON')
+            asc = chart.get('ASC')
 
-        result = {
-            "name": name,
-            "gender": gender,
-            "moon_sign": moon.sign,
-            "ascendant": asc.sign,
-            "place": place
-        }
+            result = {
+                "name": name,
+                "gender": gender,
+                "moon_sign": moon.sign,
+                "ascendant": asc.sign,
+                "place": place
+            }
+        except Exception as e:
+            print("Error:", e)
+            result = {"error": "Something went wrong. Please check input format."}
+
     return render_template("blessings.html", result=result)
 
 if __name__ == "__main__":
