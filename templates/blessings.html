@@ -112,7 +112,7 @@
             <input type="time" name="tob" step="60" required>
 
             <label>Place of Birth:</label>
-            <input type="text" name="place" id="place" list="place-options" required autocomplete="off">
+            <input type="text" name="pob" id="pob" list="place-options" required autocomplete="off">
             <datalist id="place-options"></datalist>
 
             <button type="submit">✨ Generate Blessing ✨</button>
@@ -120,20 +120,3 @@
     {% endif %}
 
     <footer>
-        🕉️ May your journey be guided by the fragrance of divine blessings.
-    </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const placeInput = document.getElementById('place');
-            const datalist = document.getElementById('place-options');
-            let debounce;
-
-            placeInput.addEventListener('input', function () {
-                clearTimeout(debounce);
-                const query = this.value;
-                if (query.length < 3) return;
-
-                debounce = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=in&q=${query}`)
-                        .then(response =>
