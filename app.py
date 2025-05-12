@@ -49,10 +49,6 @@ mahadasha_years = {
     "Mercury": 17
 }
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    result = None
-    
 # Convert float latitude/longitude to "degrees:minutes:seconds" format
 def float_to_dms_string(value):
     degrees = int(value)
@@ -60,8 +56,10 @@ def float_to_dms_string(value):
     seconds = int(((abs(value) - abs(degrees)) * 60 - minutes) * 60)
     return f"{degrees}:{minutes}:{seconds}"
 
-
-if request.method == "POST":
+@app.route("/", methods=["GET", "POST"])
+def index():
+    result = None
+    if request.method == "POST":
         name = request.form.get("name")
         gender = request.form.get("gender")
         date_str = request.form.get("dob")
