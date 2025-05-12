@@ -38,8 +38,11 @@ def index():
         try:
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-                print("LatLon debug:", lat, lon)
-           pos = GeoPos(float(lat), float(lon))  # ✅ This line must be indented exactly like others
+            
+            # Fixed lat/lon (Faridabad, India) as float
+            lat = 28.4089
+            lon = 77.3178
+            pos = GeoPos(float(lat), float(lon))
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
