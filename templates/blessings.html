@@ -114,9 +114,18 @@
             <label>Place of Birth:</label>
             <input type="text" name="pob" id="pob" list="place-options" required autocomplete="off">
             <datalist id="place-options"></datalist>
-<script>
+
+            <button type="submit">✨ Generate Blessing ✨</button>
+        </form>
+    {% endif %}
+
+    <footer>
+        🕉️ May your journey be guided by the fragrance of divine blessings.
+    </footer>
+
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const placeInput = document.getElementById('place');
+            const placeInput = document.getElementById('pob');
             const datalist = document.getElementById('place-options');
             let debounce;
 
@@ -140,11 +149,5 @@
             });
         });
     </script>
-
-
-            
-            <button type="submit">✨ Generate Blessing ✨</button>
-        </form>
-    {% endif %}
-
-    <footer>
+</body>
+</html>
