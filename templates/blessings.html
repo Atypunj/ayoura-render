@@ -132,5 +132,27 @@
             });
         });
     </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.querySelector('input[name="pob"]');
+    let timeout;
+
+    input.addEventListener("input", function () {
+        clearTimeout(timeout);
+        if (input.value.length < 3) return;
+
+        timeout = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&limit=1&q=${input.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        input.value = data[0].display_name;
+                    }
+                });
+        }, 500);
+    });
+});
+</script>
+
 </body>
 </html>
