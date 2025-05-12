@@ -38,7 +38,7 @@ def index():
         try:
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-            pos = GeoPos("28.4089", "77.3178")  # Faridabad (fallback)
+           pos = GeoPos(float(lat), float(lon))
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
