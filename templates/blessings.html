@@ -81,7 +81,7 @@
 <body>
     <h2>🌸 Fragrance of Blessings 🌸</h2>
 
-  {% if result %}
+    {% if result %}
         {% if result.error %}
             <p style="color:red;">{{ result.error }}</p>
         {% else %}
@@ -93,44 +93,32 @@
             <p><strong>Nakshatra:</strong> {{ result.nakshatra }}</p>
             <p><strong>Mahadasha Lord:</strong> {{ result.mahadasha }}</p>
         {% endif %}
-        <a href="/">🔁 Go Back</a>
+        <div style="text-align: center;"><a href="/">🔁 Go Back</a></div>
     {% else %}
         <form method="POST" action="/">
-            Name: <input type="text" name="name" required><br>
-            Gender:
-            <input type="radio" name="gender" value="Male" required> Male
-            <input type="radio" name="gender" value="Female" required> Female<br>
-            Date of Birth: <input type="date" name="dob" required><br>
-            Time of Birth: <input type="time" name="tob" step="60" required><br>
-            Place of Birth: <input type="text" name="pob" required><br>
+            <label for="name">Full Name:</label>
+            <input type="text" name="name" id="name" pattern="[A-Za-z]+" title="Only letters allowed. No spaces or special characters." required>
+
+            <label>Gender:</label>
+            <div class="gender-group">
+                <label><input type="radio" name="gender" value="Male" required> 👨 Male</label>
+                <label><input type="radio" name="gender" value="Female" required> 👩 Female</label>
+            </div>
+
+            <label>Date of Birth:</label>
+            <input type="date" name="dob" required>
+
+            <label>Time of Birth:</label>
+            <input type="time" name="tob" step="60" required>
+
+            <label>Place of Birth:</label>
+            <input type="text" name="place" id="place" list="place-options" required autocomplete="off">
+            <datalist id="place-options"></datalist>
+
             <button type="submit">✨ Generate Blessing ✨</button>
         </form>
     {% endif %}
 
-
-
-    <form action="/report" method="get">
-        <label for="name">Full Name:</label>
-        <input type="text" name="name" id="name" pattern="[A-Za-z]+" title="Only letters allowed. No spaces or special characters." required>
-
-        <label>Gender:</label>
-        <div class="gender-group">
-            <label><input type="radio" name="gender" value="male" required> 👨 Male</label>
-            <label><input type="radio" name="gender" value="female" required> 👩 Female</label>
-        </div>
-
-        <label>Date of Birth:</label>
-        <input type="date" name="dob" required>
-
-        <label>Time of Birth:</label>
-        <input type="time" name="tob" placeholder="HH:MM AM/PM" required>
-
-        <label>Place of Birth:</label>
-        <input type="text" name="place" id="place" list="place-options" required autocomplete="off">
-        <datalist id="place-options"></datalist>
-
-        <button type="submit">✨ Generate Blessing ✨</button>
-    </form>
     <footer>
         🕉️ May your journey be guided by the fragrance of divine blessings.
     </footer>
@@ -148,18 +136,4 @@
 
                 debounce = setTimeout(() => {
                     fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=in&q=${query}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            datalist.innerHTML = '';
-                            data.forEach(place => {
-                                const option = document.createElement('option');
-                                option.value = place.display_name;
-                                datalist.appendChild(option);
-                            });
-                        });
-                }, 300);
-            });
-        });
-    </script>
-</body>
-</html>
+                        .then(response =>
