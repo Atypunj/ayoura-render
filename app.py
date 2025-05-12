@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
@@ -49,7 +48,6 @@ mahadasha_years = {
     "Mercury": 17
 }
 
-# Convert float latitude/longitude to "degrees:minutes:seconds" format
 def float_to_dms_string(value):
     degrees = int(value)
     minutes = int((abs(value) - abs(degrees)) * 60)
@@ -59,6 +57,7 @@ def float_to_dms_string(value):
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+
     if request.method == "POST":
         name = request.form.get("name")
         gender = request.form.get("gender")
@@ -69,12 +68,17 @@ def index():
         try:
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-            pos = GeoPos("28.4089", "77.3178")  # Faridabad
 
+            lat = 28.4089
+            lon = 77.3178
+            lat_str = float_to_dms_string(lat)
+            lon_str = float_to_dms_string(lon)
+
+            pos = GeoPos(lat_str, lon_str)
             chart = Chart(dob, pos)
+
             moon = chart.get('MOON')
             asc = chart.get('ASC')
-
             moon_deg = moon.lon
 
             nakshatra = "Unknown"
@@ -94,6 +98,7 @@ def index():
                 "mahadasha": dasha_lord,
                 "place": place
             }
+
         except Exception as e:
             print("Error:", e)
             result = {"error": "There was a problem processing your input."}
