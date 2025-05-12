@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ayoura Sky - Divine Blessings</title>
+</head>
+<body>
+    <h2>🌸 Fragrance of Blessings 🌸</h2>
+    {% if result %}
+        {% if result.error %}
+            <p style="color:red;">{{ result.error }}</p>
+        {% else %}
+            <p><strong>Name:</strong> {{ result.name }}</p>
+            <p><strong>Gender:</strong> {{ result.gender }}</p>
+            <p><strong>Place of Birth:</strong> {{ result.place }}</p>
+            <p><strong>Moon Sign (Rashi):</strong> {{ result.moon_sign }}</p>
+            <p><strong>Ascendant (Lagna):</strong> {{ result.ascendant }}</p>
+            <p><strong>Nakshatra:</strong> {{ result.nakshatra }}</p>
+            <p><strong>Mahadasha Lord:</strong> {{ result.mahadasha }}</p>
+        {% endif %}
+        <a href="/">🔁 Go Back</a>
+    {% else %}
+        <form method="POST" action="/">
+            Name: <input type="text" name="name" required><br>
+            Gender:
+            <input type="radio" name="gender" value="Male" required> Male
+            <input type="radio" name="gender" value="Female" required> Female<br>
+            Date of Birth: <input type="date" name="dob" required><br>
+            Time of Birth: <input type="time" name="tob" step="60" required><br>
+            Place of Birth: <input type="text" name="pob" required><br>
+            <button type="submit">✨ Generate Blessing ✨</button>
+        </form>
+    {% endif %}
+</body>
+</html>
