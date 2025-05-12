@@ -57,7 +57,6 @@ def float_to_dms_string(value):
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
-
     if request.method == "POST":
         name = request.form.get("name")
         gender = request.form.get("gender")
@@ -69,18 +68,16 @@ def index():
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
+            # fallback to Faridabad coordinates (for now)
             lat = 28.4089
             lon = 77.3178
-            lat_str = float_to_dms_string(lat)
-            lon_str = float_to_dms_string(lon)
+            pos = GeoPos(float_to_dms_string(lat), float_to_dms_string(lon))
 
-            pos = GeoPos(lat_str, lon_str)
             chart = Chart(dob, pos)
-
             moon = chart.get('MOON')
             asc = chart.get('ASC')
-            moon_deg = moon.lon
 
+            moon_deg = moon.lon
             nakshatra = "Unknown"
             dasha_lord = "Unknown"
             for name_nak, lord, start, end in nakshatras:
