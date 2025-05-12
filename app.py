@@ -11,10 +11,10 @@ def index():
     result = None
     if request.method == "POST":
         name = request.form.get("name")
-        gender = request.form.get["gender"]
-        date_str = request.form.get["dob"]
-        time_str = request.form.get["tob"]
-        place = request.form.get["pob"]
+        gender = request.form.get("gender")
+        date_str = request.form.get("dob")
+        time_str = request.form.get("tob")
+        place = request.form.get("pob")
 
         dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
         dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')  # IST
