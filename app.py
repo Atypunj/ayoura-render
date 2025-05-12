@@ -87,9 +87,12 @@ def index():
                 "mahadasha": dasha_lord,
                 "place": place
             }
-        except Exception as e:
-            print("Error:", e)
-            result = {"error": "There was a problem processing your input."}
+        import traceback
+except Exception as e:
+    print("ERROR OCCURRED:", e)
+    traceback.print_exc()
+    result = {"error": "There was a problem processing your input."}
+
 
     return render_template("blessings.html", result=result)
 
