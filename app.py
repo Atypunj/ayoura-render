@@ -3,6 +3,7 @@ from flatlib.chart import Chart
 from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
 import datetime
+import requests
 
 app = Flask(__name__)
 
@@ -36,27 +37,23 @@ nakshatras = [
     ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-mahadasha_years = {
-    "Ketu": 7,
-    "Venus": 20,
-    "Sun": 6,
-    "Moon": 10,
-    "Mars": 7,
-    "Rahu": 18,
-    "Jupiter": 16,
-    "Saturn": 19,
-    "Mercury": 17
-}
-
-def float_to_dms_string(value):
-    degrees = int(value)
-    minutes = int((abs(value) - abs(degrees)) * 60)
-    seconds = int(((abs(value) - abs(degrees)) * 60 - minutes) * 60)
-    return f"{degrees}:{minutes}:{seconds}"
+def get_coordinates(place):
+    url = f"https://nominatim.openstreetmap.org/search"
+    params = {"q": place, "format": "json"}
+    try:
+        response = requests.get(url, params=params, headers={"User-Agent": "AyouraApp/1.0"})
+        data = response.json()
+        if not data:
+            raise ValueError("No location found")
+        return float(data[0]["lat"]), float(data[0]["lon"])
+    except Exception as e:
+        print("Geo lookup failed:", e)
+        raise ValueError("Location not found or invalid.")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+
     if request.method == "POST":
         name = request.form.get("name")
         gender = request.form.get("gender")
@@ -67,15 +64,18 @@ def index():
         try:
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
+            
+            # Get latitude and longitude
+            lat, lon = get_coordinates(place)
+            print("LatLon debug:", lat, lon)
 
-            # fallback to Faridabad coordinates (for now)
-            lat = 28.4089
-            lon = 77.3178
-            pos = GeoPos(float_to_dms_string(lat), float_to_dms_string(lon))
-
+            pos = GeoPos(lat, lon)
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
             asc = chart.get('ASC')
+
+            if not moon or not asc:
+                raise ValueError("Chart computation failed.")
 
             moon_deg = moon.lon
             nakshatra = "Unknown"
@@ -98,7 +98,7 @@ def index():
 
         except Exception as e:
             print("Error:", e)
-            result = {"error": "There was a problem processing your input."}
+            result = {"error": "There was a problem processing your input. Try a nearby city or simpler place name."}
 
     return render_template("blessings.html", result=result)
 
