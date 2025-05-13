@@ -42,7 +42,8 @@ def index():
             lat = float(lat_str)
             lon = float(lon_str)
 
-            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
+            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
+
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')  # IST
 
             print(f"Using coordinates: {lat}, {lon}")
