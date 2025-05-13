@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
@@ -20,15 +19,15 @@ nakshatras = [
     ("Purva Bhadrapada", "Jupiter", 320.0, 333.3333), ("Uttara Bhadrapada", "Saturn", 333.3333, 346.6666), ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-mahadasha_years = {
-    "Ketu": 7, "Venus": 20, "Sun": 6, "Moon": 10, "Mars": 7,
-    "Rahu": 18, "Jupiter": 16, "Saturn": 19, "Mercury": 17
-}
-
 def geocode_place(place):
     try:
         url = "https://nominatim.openstreetmap.org/search"
-        params = {"q": place + ", India", "format": "json", "limit": 1, "countrycodes": "in"}
+        params = {
+            "q": place + ", India",
+            "format": "json",
+            "limit": 1,
+            "countrycodes": "in"
+        }
         headers = {"User-Agent": "AyouraAstroApp"}
         response = requests.get(url, params=params, headers=headers, timeout=10)
         response.raise_for_status()
@@ -37,7 +36,7 @@ def geocode_place(place):
             return data[0]['lat'], data[0]['lon']
     except Exception as e:
         print("Geocoding error:", e)
-    return "28.4089", "77.3178"
+    return "28.4089", "77.3178"  # Default to Faridabad
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -55,7 +54,7 @@ def index():
 
             lat, lon = geocode_place(place)
             print(f"Using coordinates: {lat}, {lon}")
-            pos = GeoPos(str(lat), str(lon))
+            pos = GeoPos(str(lat), str(lon))  # Corrected: use str(), not int()
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
