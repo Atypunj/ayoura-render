@@ -81,10 +81,14 @@ def index():
             print("Coordinates (DMS):", lat_dms, lon_dms)
 
             pos = GeoPos(lat_dms, lon_dms)
-            chart = Chart(dob, pos)
+            try:
+                chart = Chart(dob, pos)
+            except IndexError as e:
+                print("Ephemeris error:", e)
+                raise ValueError("The planetary positions could not be calculated. Try a nearby place or adjust birth time.")
+
             moon = chart.get('MOON')
             asc = chart.get('ASC')
-
             moon_deg = moon.lon
 
             nakshatra = "Unknown"
@@ -107,7 +111,7 @@ def index():
         except Exception as e:
             print("Error occurred:")
             traceback.print_exc()
-            result = {"error": "There was a problem processing your input."}
+            result = {"error": str(e)}
 
     return render_template("blessings.html", result=result)
 
