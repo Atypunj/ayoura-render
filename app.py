@@ -20,11 +20,6 @@ nakshatras = [
     ("Purva Bhadrapada", "Jupiter", 320.0, 333.3333), ("Uttara Bhadrapada", "Saturn", 333.3333, 346.6666), ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-mahadasha_years = {
-    "Ketu": 7, "Venus": 20, "Sun": 6, "Moon": 10, "Mars": 7,
-    "Rahu": 18, "Jupiter": 16, "Saturn": 19, "Mercury": 17
-}
-
 def geocode_place(place):
     try:
         url = f"https://nominatim.openstreetmap.org/search"
@@ -39,7 +34,7 @@ def geocode_place(place):
             return lat, lon
     except Exception as e:
         print("Geocoding error:", e)
-    return 28.4089, 77.3178  # Default: Faridabad
+    return 28.4089, 77.3178  # Default fallback: Faridabad
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -56,11 +51,15 @@ def index():
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
             lat, lon = geocode_place(place)
-            pos = GeoPos(float(lat), float(lon))
+            print(f"Coordinates: lat={lat}, lon={lon}")
 
+            pos = GeoPos(str(lat), str(lon))
             chart = Chart(dob, pos)
+
             moon = chart.get('MOON')
             asc = chart.get('ASC')
+            if moon is None or asc is None:
+                raise ValueError("Chart failed to return valid planetary data")
 
             moon_deg = moon.lon
             nakshatra, dasha_lord = "Unknown", "Unknown"
