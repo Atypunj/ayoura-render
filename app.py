@@ -39,23 +39,13 @@ nakshatras = [
     ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-mahadasha_years = {
-    "Ketu": 7,
-    "Venus": 20,
-    "Sun": 6,
-    "Moon": 10,
-    "Mars": 7,
-    "Rahu": 18,
-    "Jupiter": 16,
-    "Saturn": 19,
-    "Mercury": 17
-}
-
 def decimal_to_dms(deg):
-    d = int(deg)
-    m = int((abs(deg) - abs(d)) * 60)
-    s = int((((abs(deg) - abs(d)) * 60) - m) * 60)
-    return f"{d}:{m}:{s}"
+    is_negative = deg < 0
+    d = int(abs(deg))
+    m = int((abs(deg) - d) * 60)
+    s = int((((abs(deg) - d) * 60 - m) * 60))
+    prefix = '-' if is_negative else ''
+    return f"{prefix}{d}:{m}:{s}"
 
 def get_coordinates_from_photon(place):
     url = f"https://photon.komoot.io/api/?q={place}&limit=1"
@@ -65,9 +55,11 @@ def get_coordinates_from_photon(place):
         coords = data['features'][0]['geometry']['coordinates']
         lon = float(coords[0])
         lat = float(coords[1])
+        if lat == 0.0 or lon == 0.0:
+            raise ValueError("Photon returned 0.0 coordinates.")
         return lat, lon
     else:
-        raise ValueError("Could not resolve coordinates for the place.")
+        raise ValueError("Could not resolve coordinates from Photon.")
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -85,12 +77,14 @@ def index():
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
-            # Get coordinates using Photon
             lat_dec, lon_dec = get_coordinates_from_photon(place)
             lat = decimal_to_dms(lat_dec)
             lon = decimal_to_dms(lon_dec)
-            pos = GeoPos(lat, lon)
 
+            print("Coordinates (decimal):", lat_dec, lon_dec)
+            print("Coordinates (DMS):", lat, lon)
+
+            pos = GeoPos(lat, lon)
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
             asc = chart.get('ASC')
