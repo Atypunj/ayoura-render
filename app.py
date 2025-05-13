@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
@@ -55,7 +56,7 @@ def index():
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
             lat, lon = geocode_place(place)
-         pos = GeoPos(float(lat), float(lon))
+            pos = GeoPos(float(lat), float(lon))
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
