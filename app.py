@@ -36,7 +36,7 @@ def geocode_place(place):
             return data[0]['lat'], data[0]['lon']
     except Exception as e:
         print("Geocoding error:", e)
-    return "28.4089", "77.3178"  # Default to Faridabad
+    return "28.4089", "77.3178"  # Default fallback: Faridabad
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -54,7 +54,7 @@ def index():
 
             lat, lon = geocode_place(place)
             print(f"Using coordinates: {lat}, {lon}")
-            pos = GeoPos(str(lat), str(lon))  # Corrected: use str(), not int()
+            pos = GeoPos(str(float(lat)), str(float(lon)))  # ✅ Safely convert to float, then string
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
@@ -80,7 +80,9 @@ def index():
 
         except Exception as e:
             print("Error:", e)
-            result = {"error": "There was a problem processing your input. Try a nearby city or simpler place name."}
+            result = {
+                "error": "There was a problem processing your input. Try a nearby city or simpler place name."
+            }
 
     return render_template("blessings.html", result=result)
 
