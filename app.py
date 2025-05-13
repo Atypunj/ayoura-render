@@ -59,10 +59,14 @@ def index():
         time_str = request.form.get("tob")
         place = request.form.get("pob")
 
+        print("Received input:", name, gender, date_str, time_str, place)
+
         try:
-            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
+            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-            pos = GeoPos("28.4089", "77.3178")  # Faridabad
+
+            # Default Geo Position (Faridabad, India) – dynamic lat/lon can be added later
+            pos = GeoPos("28.4089", "77.3178")
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
