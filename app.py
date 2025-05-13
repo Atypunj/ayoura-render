@@ -44,4 +44,43 @@ def index():
             gender = request.form.get("gender")
             date_str = request.form.get("dob")
             time_str = request.form.get("tob")
-            place = request.form.get("pob
+            place = request.form.get("pob").lower().strip()
+
+            if place not in INDIAN_CITIES:
+                raise ValueError("City not supported. Try a major Indian city.")
+
+            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
+            dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
+            lat, lon = INDIAN_CITIES[place]
+            pos = GeoPos(lat, lon)
+
+            chart = Chart(dob, pos)
+            moon = chart.get('MOON')
+            asc = chart.get('ASC')
+
+            moon_deg = moon.lon
+            nakshatra, dasha_lord = "Unknown", "Unknown"
+            for name_nak, lord, start, end in nakshatras:
+                if start <= moon_deg < end:
+                    nakshatra = name_nak
+                    dasha_lord = lord
+                    break
+
+            result = {
+                "name": name,
+                "gender": gender,
+                "moon_sign": moon.sign,
+                "ascendant": asc.sign,
+                "nakshatra": nakshatra,
+                "mahadasha": dasha_lord,
+                "place": place.title()
+            }
+
+        except Exception as e:
+            print("Error:", e)
+            result = {"error": str(e)}
+
+    return render_template("blessings.html", result=result)
+
+if __name__ == "__main__":
+    app.run(debug=True)
