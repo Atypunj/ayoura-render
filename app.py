@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
@@ -20,48 +19,50 @@ nakshatras = [
     ("Purva Bhadrapada", "Jupiter", 320.0, 333.3333), ("Uttara Bhadrapada", "Saturn", 333.3333, 346.6666), ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-def float_to_dms_string(value):
-    degrees = int(value)
-    minutes = int((abs(value) - abs(degrees)) * 60)
-    seconds = int(((abs(value) - abs(degrees)) * 60 - minutes) * 60)
-    return f"{degrees}:{minutes}:{seconds}"
+mahadasha_years = {
+    "Ketu": 7, "Venus": 20, "Sun": 6, "Moon": 10, "Mars": 7,
+    "Rahu": 18, "Jupiter": 16, "Saturn": 19, "Mercury": 17
+}
+
+def geocode_place(place):
+    try:
+        url = f"https://nominatim.openstreetmap.org/search"
+        params = {"q": place, "format": "json", "limit": 1}
+        headers = {"User-Agent": "AyouraAstroApp"}
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if data:
+            lat = float(data[0]['lat'])
+            lon = float(data[0]['lon'])
+            return lat, lon
+    except Exception as e:
+        print("Geocoding error:", e)
+    return 28.4089, 77.3178  # Default: Faridabad
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
-
     if request.method == "POST":
-        name = request.form.get("name")
-        gender = request.form.get("gender")
-        date_str = request.form.get("dob")
-        time_str = request.form.get("tob")
-        place = request.form.get("pob")
-
         try:
-            response = requests.get(
-                f"https://nominatim.openstreetmap.org/search?format=json&limit=1&q={place}"
-            )
-            data = response.json()
-            if not data:
-                raise ValueError("Location not found.")
-
-            lat = float(data[0]["lat"])
-            lon = float(data[0]["lon"])
-
-            lat_dms = float_to_dms_string(lat)
-            lon_dms = float_to_dms_string(lon)
+            name = request.form.get("name")
+            gender = request.form.get("gender")
+            date_str = request.form.get("dob")
+            time_str = request.form.get("tob")
+            place = request.form.get("pob")
 
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
-            pos = GeoPos(lat_dms, lon_dms)
+
+            lat, lon = geocode_place(place)
+            pos = GeoPos(str(lat), str(lon))
 
             chart = Chart(dob, pos)
-            moon = chart.get("MOON")
-            asc = chart.get("ASC")
+            moon = chart.get('MOON')
+            asc = chart.get('ASC')
 
             moon_deg = moon.lon
-            nakshatra = "Unknown"
-            dasha_lord = "Unknown"
+            nakshatra, dasha_lord = "Unknown", "Unknown"
             for name_nak, lord, start, end in nakshatras:
                 if start <= moon_deg < end:
                     nakshatra = name_nak
@@ -75,7 +76,7 @@ def index():
                 "ascendant": asc.sign,
                 "nakshatra": nakshatra,
                 "mahadasha": dasha_lord,
-                "place": data[0]["display_name"]
+                "place": place
             }
 
         except Exception as e:
