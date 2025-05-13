@@ -55,7 +55,7 @@ def index():
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
             lat, lon = geocode_place(place)
-            pos = GeoPos(str(lat), str(lon))
+         pos = GeoPos(float(lat), float(lon))
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
