@@ -50,6 +50,12 @@ mahadasha_years = {
     "Mercury": 17
 }
 
+def decimal_to_dms(deg):
+    d = int(deg)
+    m = int((abs(deg) - abs(d)) * 60)
+    s = int((((abs(deg) - abs(d)) * 60) - m) * 60)
+    return f"{d}:{m}:{s}"
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
@@ -66,8 +72,10 @@ def index():
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
-            # Default Geo Position (Faridabad, India) – dynamic lat/lon can be added later
-            pos = GeoPos("28.4089", "77.3178")
+            # Convert decimal degrees to DMS format for Flatlib
+            lat = decimal_to_dms(28.4089)
+            lon = decimal_to_dms(77.3178)
+            pos = GeoPos(lat, lon)
 
             chart = Chart(dob, pos)
             moon = chart.get('MOON')
