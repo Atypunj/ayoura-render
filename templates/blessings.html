@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Ayoura Sky - Divine Blessings</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <style>
@@ -23,131 +24,124 @@
             max-width: 600px;
             margin: 30px auto;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            animation: fadeIn 1.2s ease-out;
-            position: relative;
-            z-index: 2;
         }
         input, select, button {
+            font-family: 'Poppins', sans-serif;
             width: 100%;
             padding: 10px;
-            margin-top: 8px;
-            margin-bottom: 20px;
+            margin-top: 15px;
+            margin-bottom: 5px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        input:invalid {
-            border: 1px solid #e67e22;
-            box-shadow: 0 0 5px #e67e22;
-        }
-        .gender-group {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-        .gender-group label {
-            font-size: 16px;
         }
         button {
             background-color: #a367b1;
             color: white;
             border: none;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
         button:hover {
-            background-color: #8a54a0;
+            background-color: #8e4fa2;
         }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #555;
-            font-size: 14px;
+        #suggestions {
+            list-style: none;
+            padding-left: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            margin-top: 0;
+            margin-bottom: 15px;
+            position: absolute;
+            background: white;
+            width: calc(100% - 60px);
+            z-index: 1000;
         }
-        @media (max-width: 600px) {
-            form {
-                padding: 20px;
-                margin: 20px;
-            }
+        #suggestions li {
+            padding: 8px;
+            cursor: pointer;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        #suggestions li:hover {
+            background-color: #eee;
         }
     </style>
 </head>
 <body>
-    <h2>🌸 Fragrance of Blessings 🌸</h2>
 
-    {% if result %}
-        {% if result.error %}
-            <p style="color:red;">{{ result.error }}</p>
-        {% else %}
-            <p><strong>Name:</strong> {{ result.name }}</p>
-            <p><strong>Gender:</strong> {{ result.gender }}</p>
-            <p><strong>Place of Birth:</strong> {{ result.place }}</p>
-            <p><strong>Moon Sign (Rashi):</strong> {{ result.moon_sign }}</p>
-            <p><strong>Ascendant (Lagna):</strong> {{ result.ascendant }}</p>
-            <p><strong>Nakshatra:</strong> {{ result.nakshatra }}</p>
-            <p><strong>Mahadasha Lord:</strong> {{ result.mahadasha }}</p>
-        {% endif %}
-        <div style="text-align: center;"><a href="/">🔁 Go Back</a></div>
+<h2>🪐 Ayoura Sky - Fragrance of Blessings</h2>
+
+<form method="POST">
+    <input type="text" name="name" placeholder="Your Name" required>
+    
+    <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select>
+
+    <input type="date" name="dob" placeholder="Date of Birth" required>
+    <input type="time" name="tob" placeholder="Time of Birth" required>
+
+    <div style="position: relative;">
+        <input type="text" id="pob" name="pob" placeholder="Place of Birth" oninput="searchCity()" autocomplete="off" required>
+        <ul id="suggestions"></ul>
+    </div>
+
+    <button type="submit">🌸 Blessed</button>
+</form>
+
+{% if result %}
+<div style="max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px;">
+    <h3>🌟 Blessings Summary</h3>
+    {% if result.error %}
+        <p style="color:red;">{{ result.error }}</p>
     {% else %}
-        <form method="POST" action="/">
-            <label for="name">Full Name:</label>
-            <input type="text" name="name" id="name" pattern="[A-Za-z]+" title="Only letters allowed. No spaces or special characters." required>
-
-            <label>Gender:</label>
-            <div class="gender-group">
-                <label><input type="radio" name="gender" value="Male" required> 👨 Male</label>
-                <label><input type="radio" name="gender" value="Female" required> 👩 Female</label>
-            </div>
-
-            <label>Date of Birth:</label>
-            <input type="date" name="dob" required>
-
-            <label>Time of Birth:</label>
-            <input type="time" name="tob" step="60" required>
-
-            <label>Place of Birth:</label>
-            <input type="text" name="pob" id="pob" list="place-options" required autocomplete="off">
-            <datalist id="place-options"></datalist>
-
-            <button type="submit">✨ Generate Blessing ✨</button>
-        </form>
+        <p><strong>Name:</strong> {{ result.name }}</p>
+        <p><strong>Gender:</strong> {{ result.gender }}</p>
+        <p><strong>Moon Sign (Rashi):</strong> {{ result.moon_sign }}</p>
+        <p><strong>Ascendant (Lagna):</strong> {{ result.ascendant }}</p>
+        <p><strong>Nakshatra:</strong> {{ result.nakshatra }}</p>
+        <p><strong>Mahadasha Lord:</strong> {{ result.mahadasha }}</p>
+        <p><strong>Place of Birth:</strong> {{ result.place }}</p>
     {% endif %}
+</div>
+{% endif %}
 
-    <footer>
-        🕉️ May your journey be guided by the fragrance of divine blessings.
-    </footer>
+<script>
+function searchCity() {
+    const input = document.getElementById("pob");
+    const query = input.value.trim();
+    const suggestions = document.getElementById("suggestions");
+    suggestions.innerHTML = "";
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const placeInput = document.getElementById('pob');
-            const datalist = document.getElementById('place-options');
-            let debounce;
+    if (query.length < 3) return;
 
-            placeInput.addEventListener('input', function () {
-                clearTimeout(debounce);
-                const query = this.value;
-                if (query.length < 3) return;
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=22.5937&lon=78.9629`;
 
-                debounce = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=in&q=${query}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            datalist.innerHTML = '';
-                            data.forEach(place => {
-                                const option = document.createElement('option');
-                                option.value = place.display_name;
-                                datalist.appendChild(option);
-                            });
-                        });
-                }, 300);
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            data.features.forEach(place => {
+                const props = place.properties;
+                if (props.country !== "India") return;
+
+                const name = props.name || "";
+                const state = props.state || "";
+                const country = props.country || "";
+                const fullPlace = `${name}, ${state}, ${country}`;
+
+                const li = document.createElement("li");
+                li.textContent = fullPlace;
+                li.onclick = () => {
+                    input.value = fullPlace;
+                    suggestions.innerHTML = "";
+                };
+                suggestions.appendChild(li);
             });
-        });
-    </script>
+        })
+        .catch(error => console.error("Photon error:", error));
+}
+</script>
+
 </body>
 </html>
