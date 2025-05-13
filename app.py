@@ -4,6 +4,7 @@ from flatlib.chart import Chart
 from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
 import datetime
+import traceback
 
 app = Flask(__name__)
 
@@ -62,7 +63,7 @@ def index():
         print("Received input:", name, gender, date_str, time_str, place)
 
         try:
-            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %I:%M %p")
+            dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
             # Default Geo Position (Faridabad, India) – dynamic lat/lon can be added later
@@ -92,7 +93,8 @@ def index():
                 "place": place
             }
         except Exception as e:
-            print("Error:", e)
+            print("Error occurred:")
+            traceback.print_exc()
             result = {"error": "There was a problem processing your input."}
 
     return render_template("blessings.html", result=result)
