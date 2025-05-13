@@ -5,6 +5,7 @@ from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
 import datetime
 import traceback
+import requests
 
 app = Flask(__name__)
 
@@ -56,6 +57,18 @@ def decimal_to_dms(deg):
     s = int((((abs(deg) - abs(d)) * 60) - m) * 60)
     return f"{d}:{m}:{s}"
 
+def get_coordinates_from_photon(place):
+    url = f"https://photon.komoot.io/api/?q={place}&limit=1"
+    response = requests.get(url)
+    data = response.json()
+    if data['features']:
+        coords = data['features'][0]['geometry']['coordinates']
+        lon = float(coords[0])
+        lat = float(coords[1])
+        return lat, lon
+    else:
+        raise ValueError("Could not resolve coordinates for the place.")
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
@@ -72,9 +85,10 @@ def index():
             dt = datetime.datetime.strptime(date_str + " " + time_str, "%Y-%m-%d %H:%M")
             dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), '+05:30')
 
-            # Convert decimal degrees to DMS format for Flatlib
-            lat = decimal_to_dms(28.4089)
-            lon = decimal_to_dms(77.3178)
+            # Get coordinates using Photon
+            lat_dec, lon_dec = get_coordinates_from_photon(place)
+            lat = decimal_to_dms(lat_dec)
+            lon = decimal_to_dms(lon_dec)
             pos = GeoPos(lat, lon)
 
             chart = Chart(dob, pos)
