@@ -1,5 +1,3 @@
-
-# app.py (replace this with the actual working content)
 from flask import Flask, render_template, request
 from flatlib.chart import Chart
 from flatlib.datetime import Datetime
@@ -32,10 +30,11 @@ def index():
         place = request.form.get("pob")
 
         try:
+            # Combine date and time
             dt = datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-            dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), "+05:30")
+            dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), "+05:30")  # Indian timezone
 
-            # Photon API call to get coordinates
+            # Call Photon API to get coordinates
             photon_url = f"https://photon.komoot.io/api/?q={place}&lat=22.5937&lon=78.9629"
             response = requests.get(photon_url).json()
 
@@ -48,14 +47,15 @@ def index():
             if not coords:
                 raise ValueError("No coordinates found for a valid Indian location.")
 
-lon, lat = coords[0], coords[1]
-pos = GeoPos(float(lat), float(lon))
+            lon, lat = coords[0], coords[1]
+            pos = GeoPos(float(lat), float(lon))  # ✅ Correct: pass float values
 
-
+            # Generate astrological chart
             chart = Chart(dob, pos)
             moon = chart.get("MOON")
             asc = chart.get("ASC")
 
+            # Calculate nakshatra and dasha
             moon_deg = moon.lon
             nakshatra = "Unknown"
             dasha_lord = "Unknown"
@@ -74,8 +74,11 @@ pos = GeoPos(float(lat), float(lon))
                 "mahadasha": dasha_lord,
                 "place": place
             }
+
         except Exception as e:
-            result = {"error": f"The planetary positions could not be calculated. Try a nearby place or adjust birth time. ({e})"}
+            result = {
+                "error": f"The planetary positions could not be calculated. Try a nearby place or adjust birth time. ({e})"
+            }
 
     return render_template("blessings.html", result=result)
 
