@@ -86,7 +86,7 @@
             margin-bottom: 20px;
             position: absolute;
             background: white;
-            width: calc(100% - 60px);
+            width: 100%;
             z-index: 1000;
         }
         #suggestions li {
@@ -100,9 +100,10 @@
 </head>
 <body>
     <h2>🌸 Fragrance of Blessings 🌸</h2>
+
     {% if result %}
         {% if result.error %}
-            <p style="color:red;">{{ result.error }}</p>
+            <p style="color:red; text-align:center;">{{ result.error }}</p>
         {% else %}
             <p><strong>Name:</strong> {{ result.name }}</p>
             <p><strong>Gender:</strong> {{ result.gender }}</p>
@@ -116,47 +117,65 @@
     {% else %}
         <form method="POST" action="/">
             <label for="name">Full Name:</label>
-            <input type="text" name="name" id="name" pattern="[A-Za-z]+" title="Only letters allowed. No spaces or special characters." required>
+            <input type="text" name="name" id="name" pattern="[A-Za-z\s]+" title="Only letters and spaces allowed." required aria-label="Full Name">
+
             <label>Gender:</label>
             <div class="gender-group">
                 <label><input type="radio" name="gender" value="Male" required> 👨 Male</label>
-                <label><input type="radio" name="gender" value="Female" required> 👩 Female</label>
+                <label><input type="radio" name="gender" value="Female"> 👩 Female</label>
             </div>
-            <label>Date of Birth:</label>
-            <input type="date" name="dob" required>
-            <label>Time of Birth:</label>
-            <input type="time" name="tob" step="60" required>
-            <label>Place of Birth:</label>
+
+            <label for="dob">Date of Birth:</label>
+            <input type="date" name="dob" id="dob" required aria-label="Date of Birth">
+
+            <label for="tob">Time of Birth:</label>
+            <input type="time" name="tob" id="tob" step="60" required aria-label="Time of Birth">
+
+            <label for="pob">Place of Birth:</label>
             <div style="position: relative;">
-                <input type="text" name="pob" id="pob" required autocomplete="off">
+                <input type="text" name="pob" id="pob" required autocomplete="off" aria-label="Place of Birth">
                 <ul id="suggestions"></ul>
             </div>
+
             <button type="submit">✨ Generate Blessing ✨</button>
         </form>
     {% endif %}
+
     <footer>
         🕉️ May your journey be guided by the fragrance of divine blessings.
     </footer>
+
     <script>
         const pobInput = document.getElementById("pob");
         const suggestions = document.getElementById("suggestions");
         let debounce;
+
         pobInput.addEventListener("input", () => {
             clearTimeout(debounce);
             const query = pobInput.value.trim();
             suggestions.innerHTML = "";
             if (query.length < 3) return;
+
             debounce = setTimeout(() => {
                 const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=22.5937&lon=78.9629`;
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
+                        if (!data.features || data.features.length === 0) {
+                            const li = document.createElement("li");
+                            li.textContent = "No matches found.";
+                            suggestions.appendChild(li);
+                            return;
+                        }
+
                         data.features.forEach(place => {
                             const props = place.properties;
                             if (props.country !== "India") return;
+
                             const name = props.name || "";
                             const state = props.state || "";
                             const fullPlace = `${name}${state ? ', ' + state : ''}, India`;
+
                             const li = document.createElement("li");
                             li.textContent = fullPlace;
                             li.onclick = () => {
@@ -165,6 +184,12 @@
                             };
                             suggestions.appendChild(li);
                         });
+                    })
+                    .catch(err => {
+                        const li = document.createElement("li");
+                        li.textContent = "Error fetching suggestions.";
+                        suggestions.appendChild(li);
+                        console.error("Autocomplete error:", err);
                     });
             }, 300);
         });
