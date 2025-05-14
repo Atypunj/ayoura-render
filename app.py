@@ -1,103 +1,86 @@
-from flask import Flask, request, jsonify, render_template_string
-from datetime import datetime
-import swisseph as swe
+from flask import Flask, render_template, request
+from flatlib.chart import Chart
+from flatlib.datetime import Datetime
+from flatlib.geopos import GeoPos
+import datetime
 import requests
 
 app = Flask(__name__)
-swe.set_ephe_path("./swisseph_data")
 
-signs = [
-    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+nakshatras = [
+    ("Ashwini", "Ketu", 0.0, 13.3333), ("Bharani", "Venus", 13.3333, 26.6666), ("Krittika", "Sun", 26.6666, 40.0),
+    ("Rohini", "Moon", 40.0, 53.3333), ("Mrigashira", "Mars", 53.3333, 66.6666), ("Ardra", "Rahu", 66.6666, 80.0),
+    ("Punarvasu", "Jupiter", 80.0, 93.3333), ("Pushya", "Saturn", 93.3333, 106.6666), ("Ashlesha", "Mercury", 106.6666, 120.0),
+    ("Magha", "Ketu", 120.0, 133.3333), ("Purva Phalguni", "Venus", 133.3333, 146.6666), ("Uttara Phalguni", "Sun", 146.6666, 160.0),
+    ("Hasta", "Moon", 160.0, 173.3333), ("Chitra", "Mars", 173.3333, 186.6666), ("Swati", "Rahu", 186.6666, 200.0),
+    ("Vishakha", "Jupiter", 200.0, 213.3333), ("Anuradha", "Saturn", 213.3333, 226.6666), ("Jyeshtha", "Mercury", 226.6666, 240.0),
+    ("Mula", "Ketu", 240.0, 253.3333), ("Purva Ashadha", "Venus", 253.3333, 266.6666), ("Uttara Ashadha", "Sun", 266.6666, 280.0),
+    ("Shravana", "Moon", 280.0, 293.3333), ("Dhanishta", "Mars", 293.3333, 306.6666), ("Shatabhisha", "Rahu", 306.6666, 320.0),
+    ("Purva Bhadrapada", "Jupiter", 320.0, 333.3333), ("Uttara Bhadrapada", "Saturn", 333.3333, 346.6666), ("Revati", "Mercury", 346.6666, 360.0)
 ]
 
-planet_lords = {
-    "Aries": "Mars", "Taurus": "Venus", "Gemini": "Mercury", "Cancer": "Moon",
-    "Leo": "Sun", "Virgo": "Mercury", "Libra": "Venus", "Scorpio": "Mars",
-    "Sagittarius": "Jupiter", "Capricorn": "Saturn", "Aquarius": "Saturn", "Pisces": "Jupiter"
-}
+@app.route("/", methods=["GET", "POST"])
+def index():
+    result = None
+    if request.method == "POST":
+        name = request.form.get("name")
+        gender = request.form.get("gender")
+        date_str = request.form.get("dob")
+        time_str = request.form.get("tob")
+        place = request.form.get("pob")
 
-def get_coordinates(place_name):
-    url = f"https://nominatim.openstreetmap.org/search?format=json&q={place_name}"
-    headers = {"User-Agent": "astro-api/1.0"}
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200 and response.text.strip():
-            data = response.json()
-            if data:
-                return float(data[0]['lat']), float(data[0]['lon'])
-    except Exception as e:
-        print("Geocoding error:", e)
-    return 0.0, 0.0
+        try:
+            # Combine date and time
+            dt = datetime.datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+            dob = Datetime(dt.strftime("%Y/%m/%d"), dt.strftime("%H:%M"), "+05:30")  # Indian timezone
 
-def calculate_astrology_details(dob, tob, place):
-    birth_datetime = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
-    jd = swe.julday(birth_datetime.year, birth_datetime.month, birth_datetime.day,
-                    birth_datetime.hour + birth_datetime.minute / 60)
+            # Call Photon API to get coordinates
+            photon_url = f"https://photon.komoot.io/api/?q={place}&lat=22.5937&lon=78.9629"
+            response = requests.get(photon_url).json()
 
-    lat, lon = get_coordinates(place)
-    houses, _ = swe.houses(jd, lat, lon)
-    asc = houses[0]
-    lagna_sign = int(asc / 30) + 1
+            coords = None
+            for feature in response.get("features", []):
+                if feature["properties"].get("country") == "India":
+                    coords = feature["geometry"]["coordinates"]
+                    break
 
-    sun_long = swe.calc_ut(jd, swe.SUN)[0]
-    moon_long = swe.calc_ut(jd, swe.MOON)[0]
+            if not coords:
+                raise ValueError("No coordinates found for a valid Indian location.")
 
-    sun_sign = int(sun_long / 30) + 1
-    moon_sign = int(moon_long / 30) + 1
+            lon, lat = coords[0], coords[1]
+            pos = GeoPos(float(lat), float(lon))  # ✅ Correct: pass float values
 
-    lagna = signs[lagna_sign - 1]
-    rasi = signs[moon_sign - 1]
-    sun = signs[sun_sign - 1]
+            # Generate astrological chart
+            chart = Chart(dob, pos)
+            moon = chart.get("MOON")
+            asc = chart.get("ASC")
 
-    return {
-        "lagna": lagna,
-        "lagna_lord": planet_lords.get(lagna, "Unknown"),
-        "rasi": rasi,
-        "rasi_lord": planet_lords.get(rasi, "Unknown"),
-        "indian_sun_sign": sun,
-        "western_sun_sign": sun,
-        "current_dasha": {"planet": "Mars", "start": "2020-04", "end": "2027-04"},
-        "current_antardasha": {"planet": "Moon", "start": "2024-11", "end": "2025-09"},
-        "weak_planet": "Saturn",
-        "remedies": [
-            "Chant Hanuman Chalisa on Saturdays",
-            "Wear a blue sapphire after consulting an astrologer",
-            "Offer oil to Shani temple on Saturdays"
-        ]
-    }
+            # Calculate nakshatra and dasha
+            moon_deg = moon.lon
+            nakshatra = "Unknown"
+            dasha_lord = "Unknown"
+            for name_nak, lord, start, end in nakshatras:
+                if start <= moon_deg < end:
+                    nakshatra = name_nak
+                    dasha_lord = lord
+                    break
 
-@app.route('/')
-def form():
-    return render_template_string("""
-    <html>
-    <head><title>Astrology API</title></head>
-    <body style="font-family:Arial; padding:30px;">
-        <h2>🧘 Enter Your Birth Details</h2>
-        <form action="/astro-summary" method="get">
-            <label>Date of Birth (YYYY-MM-DD):</label><br>
-            <input name="dob" required><br><br>
-            <label>Time of Birth (HH:MM 24hr):</label><br>
-            <input name="tob" required><br><br>
-            <label>Place of Birth:</label><br>
-            <input name="place" required><br><br>
-            <button type="submit">Get Astrology Summary</button>
-        </form>
-    </body>
-    </html>
-    """)
+            result = {
+                "name": name,
+                "gender": gender,
+                "moon_sign": moon.sign,
+                "ascendant": asc.sign,
+                "nakshatra": nakshatra,
+                "mahadasha": dasha_lord,
+                "place": place
+            }
 
-@app.route('/astro-summary', methods=['GET'])
-def astro_summary():
-    dob = request.args.get('dob')
-    tob = request.args.get('tob')
-    place = request.args.get('place')
+        except Exception as e:
+            result = {
+                "error": f"The planetary positions could not be calculated. Try a nearby place or adjust birth time. ({e})"
+            }
 
-    if not dob or not tob or not place:
-        return jsonify({"error": "Missing required parameters: dob, tob, place"}), 400
+    return render_template("blessings.html", result=result)
 
-    details = calculate_astrology_details(dob, tob, place)
-    return jsonify(details)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
