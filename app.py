@@ -48,8 +48,9 @@ def index():
             if not coords:
                 raise ValueError("No coordinates found for a valid Indian location.")
 
-            lon, lat = coords[0], coords[1]
-            pos = GeoPos(str(lat), str(lon))
+lon, lat = coords[0], coords[1]
+pos = GeoPos(float(lat), float(lon))
+
 
             chart = Chart(dob, pos)
             moon = chart.get("MOON")
